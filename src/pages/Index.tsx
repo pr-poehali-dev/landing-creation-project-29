@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import Icon from "@/components/ui/icon";
+import { useYookassa, openPaymentPage } from "@/components/extensions/yookassa/useYookassa";
+
+const YOOKASSA_API_URL = "https://functions.poehali.dev/7e68ab13-a54d-461f-9eee-15c0a6884fb6";
+const RETURN_URL = `${window.location.origin}/success`;
 
 const HERO_IMG = "https://cdn.poehali.dev/projects/28666ef4-1110-4722-bbfc-52ecc4d61d4f/files/d5bf26c7-e352-4f7d-a02f-77e7d0efceae.jpg";
 const CROWD_IMG = "https://cdn.poehali.dev/projects/28666ef4-1110-4722-bbfc-52ecc4d61d4f/files/b6a72a4e-c14d-47a2-89cf-eaccbf0f2e3c.jpg";
@@ -9,6 +13,7 @@ const tickets = [
   {
     type: "ТРИБУНА",
     price: "1 800 ₽",
+    amount: 1800,
     desc: "Лучший обзор зала",
     perks: ["Панорамный вид", "Удобные кресла", "Гардероб"],
     accent: "#FFD600",
@@ -17,6 +22,7 @@ const tickets = [
   {
     type: "ПАРТЕР",
     price: "3 500 ₽",
+    amount: 3500,
     desc: "Максимальная близость к сцене",
     perks: ["Первые ряды", "Напитки в зале", "Памятная программка"],
     accent: "#FF3D00",
@@ -26,6 +32,7 @@ const tickets = [
   {
     type: "VIP",
     price: "8 900 ₽",
+    amount: 8900,
     desc: "Незабываемый опыт",
     perks: ["Встреча с артистом", "Backstage-тур", "Открытый бар", "Личный менеджер"],
     accent: "#00E5FF",
@@ -42,11 +49,74 @@ const galleryItems = [
   { img: ARTIST_IMG, label: "Студия" },
 ];
 
+function TicketPayModal({ ticket, onClose }: { ticket: typeof tickets[0]; onClose: () => void }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+
+  const { createPayment, isLoading } = useYookassa({
+    apiUrl: YOOKASSA_API_URL,
+    onSuccess: (response) => {
+      if (response.payment_url) openPaymentPage(response.payment_url);
+    },
+  });
+
+  const handlePay = async () => {
+    if (!email.includes("@")) { setError("Введите корректный email"); return; }
+    setError("");
+    await createPayment({
+      amount: ticket.amount,
+      userEmail: email,
+      userName: name || undefined,
+      returnUrl: RETURN_URL,
+      cartItems: [{ id: ticket.type, name: `Билет ${ticket.type} — ЗВУК 2026`, price: ticket.amount, quantity: 1 }],
+    });
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="pay-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}><Icon name="X" size={20} /></button>
+        <div className="pay-modal__header">
+          <div className="pay-modal__type" style={{ color: ticket.accent }}>{ticket.type}</div>
+          <div className="pay-modal__price">{ticket.price}</div>
+          <div className="pay-modal__event">ЗВУК · 15 августа 2026 · Stadium Live</div>
+        </div>
+        <div className="pay-modal__body">
+          <div className="form-field">
+            <label>Имя (необязательно)</label>
+            <input type="text" placeholder="Ваше имя" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="form-field">
+            <label>Email *</label>
+            <input type="email" placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <span className="pay-modal__hint">На него придёт электронный билет</span>
+          </div>
+          {error && <div className="pay-modal__error">{error}</div>}
+          <button
+            className="ticket-card__btn"
+            style={{ background: ticket.accent, marginTop: 8 }}
+            onClick={handlePay}
+            disabled={isLoading}
+          >
+            {isLoading ? "Создаём заказ..." : `Перейти к оплате · ${ticket.price}`}
+          </button>
+          <p className="pay-modal__secure">
+            <Icon name="ShieldCheck" size={12} />
+            Безопасная оплата через ЮКасса
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Index() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<number | null>(null);
   const [galleryModal, setGalleryModal] = useState<number | null>(null);
+  const [payTicket, setPayTicket] = useState<typeof tickets[0] | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -186,7 +256,7 @@ export default function Index() {
                 ))}
               </ul>
               <div className="ticket-card__avail">Осталось: {t.available} мест</div>
-              <button className="ticket-card__btn">Купить билет</button>
+              <button className="ticket-card__btn" onClick={(e) => { e.stopPropagation(); setPayTicket(t); }}>Купить билет</button>
             </div>
           ))}
         </div>
@@ -314,6 +384,11 @@ export default function Index() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* PAYMENT MODAL */}
+      {payTicket && (
+        <TicketPayModal ticket={payTicket} onClose={() => setPayTicket(null)} />
       )}
     </div>
   );

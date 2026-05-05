@@ -1128,6 +1128,77 @@
   }
 }
 
+/* PAY MODAL */
+.pay-modal {
+  position: relative;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  max-width: 460px;
+  width: 100%;
+  animation: fade-up 0.3s ease;
+}
+
+.pay-modal__header {
+  padding: 40px 40px 32px;
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface2);
+}
+
+.pay-modal__type {
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.pay-modal__price {
+  font-family: var(--font-title);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--c-text);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.pay-modal__event {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  letter-spacing: 0.05em;
+}
+
+.pay-modal__body {
+  padding: 32px 40px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pay-modal__hint {
+  font-size: 11px;
+  color: var(--c-text-muted);
+  margin-top: 4px;
+  display: block;
+}
+
+.pay-modal__error {
+  font-size: 12px;
+  color: #ff3d00;
+  background: rgba(255, 61, 0, 0.08);
+  padding: 8px 12px;
+  border-left: 2px solid #ff3d00;
+}
+
+.pay-modal__secure {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--c-text-muted);
+  justify-content: center;
+  margin-top: 4px;
+}
+
 /* RESPONSIVE */
 @media (max-width: 900px) {
   .concert-nav {
